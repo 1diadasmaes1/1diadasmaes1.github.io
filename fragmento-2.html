@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRANSMISSÃO // billy_jr</title>
+  <link rel="stylesheet" href="assets/css/terminal.css">
+  <style>
+    body { overflow-y: auto; }
+
+    .page {
+      max-width: 720px;
+      margin: 60px auto 80px;
+      padding: 0 30px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .destination {
+      border: 1px dashed #00ff00;
+      padding: 12px 18px;
+      font-size: 13px;
+      letter-spacing: 3px;
+      margin-bottom: 30px;
+      opacity: 0.8;
+    }
+    .destination .arrow { opacity: 0.5; margin: 0 8px; }
+
+    .billy-block {
+      margin-bottom: 30px;
+      min-height: 200px;
+    }
+    .billy-block > div {
+      font-size: 17px;
+      line-height: 1.7;
+      animation: fadeSlideIn 0.6s;
+    }
+
+    .paw {
+      position: absolute;
+      opacity: 0.18;
+      width: 200px;
+      height: 200px;
+      pointer-events: none;
+    }
+    .paw.tl { top: 80px; left: -30px; transform: rotate(-15deg); }
+    .paw.br { bottom: 60px; right: -30px; transform: rotate(20deg); }
+
+    .return-prompt {
+      margin-top: 50px;
+      padding: 20px;
+      border: 1px solid #00ff00;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+      display: none;
+      animation: fadeSlideIn 0.8s;
+    }
+    .return-prompt.show { display: block; }
+
+    .return-prompt h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      letter-spacing: 2px;
+    }
+    .return-prompt .hint {
+      font-size: 12px;
+      opacity: 0.6;
+      font-style: italic;
+      margin-bottom: 12px;
+    }
+    .return-prompt textarea {
+      background: #000;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      width: 100%;
+      min-height: 60px;
+      resize: vertical;
+    }
+    .return-prompt textarea:focus {
+      outline: none;
+      border-color: #80ff80;
+      box-shadow: 0 0 6px #00ff00;
+    }
+    .return-prompt .status {
+      margin-top: 14px;
+      font-size: 13px;
+      letter-spacing: 2px;
+      opacity: 0.7;
+      min-height: 18px;
+    }
+    .return-prompt .status.error {
+      color: #ff6060;
+      animation: flashRed 0.4s;
+    }
+    .return-prompt .verify-btn {
+      margin-top: 14px;
+      padding: 10px 22px;
+      width: auto;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+
+    .resolved {
+      margin-top: 30px;
+      padding: 24px;
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 16px #00ff00;
+      text-align: center;
+      display: none;
+      animation: fadeSlideIn 1s;
+    }
+    .resolved.show { display: block; }
+    .resolved .label {
+      font-size: 11px;
+      letter-spacing: 3px;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    .resolved .reveal-word {
+      font-size: 32px;
+      letter-spacing: 4px;
+      margin-bottom: 14px;
+      text-shadow: 0 0 8px #00ff00;
+    }
+
+    .action-btn {
+      padding: 14px 24px;
+      font-size: 16px;
+      letter-spacing: 2px;
+      width: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+
+  <a href="tools.html" target="_blank" class="tools-link">// TOOLS</a>
+
+  <svg class="paw tl" viewBox="0 0 100 100" fill="#00ff00">
+    <ellipse cx="50" cy="65" rx="22" ry="18"/>
+    <ellipse cx="25" cy="40" rx="9" ry="12"/>
+    <ellipse cx="42" cy="28" rx="9" ry="12"/>
+    <ellipse cx="58" cy="28" rx="9" ry="12"/>
+    <ellipse cx="75" cy="40" rx="9" ry="12"/>
+  </svg>
+  <svg class="paw br" viewBox="0 0 100 100" fill="#00ff00">
+    <ellipse cx="50" cy="65" rx="22" ry="18"/>
+    <ellipse cx="25" cy="40" rx="9" ry="12"/>
+    <ellipse cx="42" cy="28" rx="9" ry="12"/>
+    <ellipse cx="58" cy="28" rx="9" ry="12"/>
+    <ellipse cx="75" cy="40" rx="9" ry="12"/>
+  </svg>
+
+  <div class="page">
+    <div class="destination glow">
+      DE: sgt.billy.bak <span class="arrow">»</span> PARA: <strong>billy_jr</strong>
+    </div>
+
+    <div class="billy-block glow" id="billyBlock"></div>
+
+    <div class="return-prompt glow" id="returnPrompt">
+      <h3>// CONTEÚDO RECUPERADO</h3>
+      <div class="hint">decodifique o que você encontrou e digite o resultado</div>
+      <textarea id="b64Input" placeholder=""></textarea>
+      <button class="verify-btn" id="verifyBtn">&gt; VERIFICAR</button>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="resolved glow" id="resolved">
+      <div class="label">// MENSAGEM RECUPERADA</div>
+      <div class="reveal-word" id="revealWord"></div>
+      <div id="closingBilly" style="margin-bottom: 20px;"></div>
+      <button class="action-btn glow" id="nextBtn" style="display:none;">
+        &gt; CONTINUAR
+      </button>
+    </div>
+  </div>
+
+  <audio id="ambient" loop preload="auto">
+    <source src="assets/audio/clock.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="successFx" preload="auto">
+    <source src="assets/audio/click.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="warmFx" preload="auto">
+    <source src="assets/audio/warm.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="billyVoice" preload="auto">
+    <source src="assets/audio/sgt-billy-billyjr.mp3" type="audio/mpeg">
+  </audio>
+
+  <script type="module">
+    import { typeLines, wait } from './assets/js/typewriter.js';
+    import { CONFIG } from './assets/js/config.js';
+    import { normalize } from './assets/js/decoders.js';
+    import { playSuccess, playError, playBigSuccess, pulseSuccess, shakeError } from './assets/js/feedback.js';
+
+    const ambient = document.getElementById('ambient');
+    const successFx = document.getElementById('successFx');
+    const warmFx = document.getElementById('warmFx');
+    const billyVoice = document.getElementById('billyVoice');
+    ambient.volume = 0.08;
+    successFx.volume = 0.4;
+    warmFx.volume = 0.5;
+    billyVoice.volume = 0.85;
+
+    const billyBlock = document.getElementById('billyBlock');
+    const returnPrompt = document.getElementById('returnPrompt');
+    const b64Input = document.getElementById('b64Input');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const status = document.getElementById('status');
+    const resolved = document.getElementById('resolved');
+    const revealWord = document.getElementById('revealWord');
+    const closingBilly = document.getElementById('closingBilly');
+    const nextBtn = document.getElementById('nextBtn');
+
+    const EXPECTED_REVEAL = CONFIG.BILLY_JR_REVEAL;
+
+    const billyLines = [
+      '> Funcionária 001.',
+      '> Esta é minha última transmissão para meu filho.',
+      ' ',
+      '> Ele não entende palavras.',
+      '> Mas você pode entregar isso a ele.',
+      ' ',
+      '> No lugar onde ele descansa, está o que sobrou de mim.',
+      '> Vá. E volte com a próxima coordenada.',
+    ];
+
+    const closingLines = [
+      '> Você entregou minha mensagem.',
+      '> Esse fragmento aponta o próximo registro.',
+      ' ',
+      '> O que você é AGORA — algo que a Matrix não conseguiu corromper.',
+      '> Vá.',
+    ];
+
+    (async () => {
+      ambient.play().catch(() => {});
+      billyVoice.currentTime = 0;
+      billyVoice.play().catch(() => {});
+      await wait(500);
+      await typeLines(billyBlock, billyLines, {
+        speed: 35, jitter: 15, linePause: 600
+      });
+
+      await wait(800);
+      returnPrompt.classList.add('show');
+      returnPrompt.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    })();
+
+    let resolvedYet = false;
+    async function verify() {
+      if (resolvedYet) return;
+      const guess = b64Input.value.trim();
+      if (!guess) {
+        status.textContent = '[ campo vazio ]';
+        return;
+      }
+
+      if (normalize(guess) === normalize(EXPECTED_REVEAL)) {
+        resolvedYet = true;
+        playBigSuccess();
+        pulseSuccess(returnPrompt);
+        status.textContent = '> validado.';
+
+        await wait(700);
+        resolved.classList.add('show');
+
+        for (const ch of EXPECTED_REVEAL) {
+          revealWord.textContent += ch;
+          await wait(70 + Math.random() * 40);
+        }
+
+        warmFx.currentTime = 0;
+        warmFx.play().catch(() => {});
+
+        await wait(700);
+        await typeLines(closingBilly, closingLines, {
+          speed: 35, jitter: 15, linePause: 500
+        });
+
+        await wait(400);
+        nextBtn.style.display = 'inline-block';
+        resolved.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        status.textContent = '> mensagem inválida.';
+        status.classList.add('error');
+        playError();
+        shakeError(returnPrompt);
+        setTimeout(() => status.classList.remove('error'), 600);
+      }
+    }
+
+    verifyBtn.addEventListener('click', verify);
+    b64Input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); verify(); }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      successFx.currentTime = 0;
+      successFx.play().catch(() => {});
+      document.body.style.transition = 'opacity 0.6s';
+      document.body.style.opacity = '0';
+      setTimeout(() => {
+        window.location.href = 'caca-1.html';
+      }, 700);
+    });
+  </script>
+</body>
+</html>

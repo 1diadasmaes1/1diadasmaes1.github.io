@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ACESSO NECESSÁRIO</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background-color: #000;
+      color: #00ff00;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .terminal {
+      background-color: #000;
+      border: 1px solid #00ff00;
+      padding: 30px;
+      width: 450px;
+      text-align: left;
+      box-shadow: 0 0 20px #00ff00;
+      position: relative;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 24px;
+      text-shadow: 0 0 5px #00ff00;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #00ff00;
+      animation: typing 2s steps(20, end), blink 0.7s step-end infinite;
+    }
+
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+
+    @keyframes blink {
+      50% { border-color: transparent }
+    }
+
+    label {
+      margin-top: 10px;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="submit"] {
+      background-color: #000;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 8px;
+      font-size: 16px;
+      width: 100%;
+      margin-bottom: 15px;
+      transition: transform 0.2s ease-in-out;
+    }
+    
+    input[type="submit"] {
+      cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #00ff00;
+      color: #000;
+      transform: scale(1.02);
+      box-shadow: 0 0 8px #00ff00;
+    }
+
+    #response {
+      margin-top: 15px;
+      white-space: pre-wrap;
+      color: #00ff00;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <h1>> ACESSO NECESSÁRIO</h1>
+    <form id="loginForm">
+      <label for="username">ID DO USUÁRIO:</label>
+      <input type="text" id="username" name="username" required>
+      <label for="password">SENHA:</label>
+      <input type="password" id="password" name="password" required>
+      <input type="submit" value="INICIAR LOGIN">
+      <small>DICA: <a href="https://en.wikipedia.org/wiki/Hexadecimal" target="_blank" rel="noopener noreferrer">HEXADECIMAL</a></small>
+    </form>
+    <div id="response"></div>
+  </div>
+
+  <audio id="bgAudio" autoplay loop>
+    <source src="https://ucarecdn.com/57b5e680-4ac7-4f6f-a5b7-ba8713e4a6d6/" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const response = document.getElementById('response');
+
+    const validUsername = "001";
+    const validPassword = "CAPSULA";
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      response.textContent = "> Conectando...";
+
+      setTimeout(() => {
+        if (username === validUsername && password === validPassword) {
+          response.innerHTML = "> Acesso concedido.\n> Bem-vinda, " + username.toUpperCase() + ".\n> Redirecionando para o NODE seguro...";
+          setTimeout(() => {
+            window.location.href = "0.html";
+          }, 2500);
+        } else {
+          response.innerHTML = "> Acesso negado.\n> Dados não autorizados.\n> Alerta registrado.\n> Conexão finalizada.";
+        }
+      }, 1500);
+    });
+
+    window.addEventListener('click', () => {
+      const audio = document.getElementById('bgAudio');
+      if (audio.paused) {
+        audio.play()
+      }
+    }, { once: true });
+    var audio = document.getElementById("bgAudio");
+    audio.volume = 0.3;
+  </script>
+<audio autoplay>
+  <source src="https://ucarecdn.com/57b5e680-4ac7-4f6f-a5b7-ba8713e4a6d6/" type="audio/mpeg">
+</audio>
+</body>
+</html>

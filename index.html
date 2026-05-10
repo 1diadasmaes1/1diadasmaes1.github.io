@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACESSO NECESSÁRIO // σ4</title>
+  <link rel="stylesheet" href="assets/css/terminal.css">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .login-box {
+      width: 460px;
+      max-width: 100%;
+      padding: 30px;
+      border: 1px solid #00ff00;
+      box-shadow: 0 0 20px #00ff00;
+      background: #000;
+      position: relative;
+      z-index: 2;
+    }
+    h1 {
+      margin: 0 0 22px;
+      font-size: 22px;
+      letter-spacing: 3px;
+      text-shadow: 0 0 5px #00ff00;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #00ff00;
+      animation: typing 1.6s steps(20, end), blink 0.7s step-end infinite;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 3px;
+      opacity: 0.8;
+      margin: 14px 0 6px;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      letter-spacing: 2px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      letter-spacing: 3px;
+      margin-top: 18px;
+    }
+    .response {
+      margin-top: 18px;
+      font-size: 13px;
+      white-space: pre-wrap;
+      min-height: 60px;
+      line-height: 1.5;
+    }
+    .hint-row {
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px dashed #00ff00;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.6s;
+    }
+    .hint-row.show { opacity: 0.85; }
+    .hint-row .hint-label {
+      letter-spacing: 3px;
+      font-size: 10px;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+    .hint-row .hint-text {
+      font-style: italic;
+      letter-spacing: 1px;
+    }
+    .session-id {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      font-size: 11px;
+      letter-spacing: 3px;
+      opacity: 0.5;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+
+  <div class="session-id glow">
+    SESSION σ4 // 2026
+  </div>
+
+  <div class="login-box glow">
+    <h1>&gt; ACESSO NECESSÁRIO</h1>
+    <form id="loginForm" autocomplete="off">
+      <label for="user">ID DO USUÁRIO</label>
+      <input type="text" id="user" name="user" autocomplete="off" spellcheck="false" required>
+
+      <label for="pass">SENHA</label>
+      <input type="password" id="pass" name="pass" autocomplete="off" required>
+
+      <button type="submit">&gt; INICIAR LOGIN</button>
+    </form>
+
+    <div class="response" id="response"></div>
+
+    <div class="hint-row" id="hintRow">
+      <div class="hint-label">// DICA</div>
+      <div class="hint-text">Seu filho peludo favorito.</div>
+    </div>
+  </div>
+
+  <audio id="bg" loop preload="auto">
+    <source src="assets/audio/clock.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="introMusic" loop preload="auto">
+    <source src="assets/audio/intro.mp3" type="audio/mpeg">
+  </audio>
+
+  <script type="module">
+    import { CONFIG } from './assets/js/config.js';
+    import { playSuccess, playError, shakeError } from './assets/js/feedback.js';
+
+    const bg = document.getElementById('bg');
+    const introMusic = document.getElementById('introMusic');
+    bg.volume = 0.1;
+    introMusic.volume = 0.5;
+
+    const form = document.getElementById('loginForm');
+    const userInput = document.getElementById('user');
+    const passInput = document.getElementById('pass');
+    const response = document.getElementById('response');
+    const hintRow = document.getElementById('hintRow');
+    const loginBox = document.querySelector('.login-box');
+
+    let attempts = 0;
+    let solved = false;
+
+    // Start ambient + intro music na primeira interação
+    function startAudio() {
+      bg.play().catch(() => {});
+      introMusic.currentTime = 0;
+      introMusic.play().catch(() => {});
+    }
+    document.addEventListener('click', startAudio, { once: true });
+    document.addEventListener('keydown', startAudio, { once: true });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (solved) return;
+
+      const user = userInput.value.trim();
+      const pass = passInput.value.trim();
+
+      response.textContent = '> Conectando...';
+
+      setTimeout(() => {
+        if (user === CONFIG.LOGIN_USER && pass.toUpperCase() === CONFIG.LOGIN_PASS.toUpperCase()) {
+          solved = true;
+          playSuccess();
+          response.textContent = `> Acesso concedido.\n> Bem-vinda, ${user.toUpperCase()}.\n> Redirecionando...`;
+          setTimeout(() => {
+            document.body.style.transition = 'opacity 0.8s';
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+              window.location.href = 'reboot.html';
+            }, 800);
+          }, 2000);
+        } else {
+          attempts++;
+          playError();
+          shakeError(loginBox);
+
+          // Mostra dica logo no primeiro erro
+          hintRow.classList.add('show');
+          if (attempts === 1) {
+            response.textContent = '> Acesso negado.\n> Credenciais inválidas.';
+          } else {
+            response.textContent = `> Acesso negado.\n> Tentativas: ${attempts}.`;
+          }
+        }
+      }, 900);
+    });
+  </script>
+</body>
+</html>

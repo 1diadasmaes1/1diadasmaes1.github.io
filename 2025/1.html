@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FASE 1</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .start-screen {
+      position: absolute;
+      background-color: #000;
+      color: #00ff00;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      text-align: center;
+    }
+    
+    body {
+      background-color: #000;
+      color: #00ff00;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
+      overflow: hidden;
+      border: 3px solid #00ff00; /* Green outline applied to the body */
+      transition: border 0.5s ease-in-out; /* Smooth transition for the outline */
+    }
+
+    .terminal {
+      padding: 0px;
+      width: 600px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .message {
+      font-size: 30px;
+      opacity: 0;
+    }
+
+    .slide-fade-in {
+      animation: fadeSlideIn 1.5s ease-out forwards;
+    }
+
+    .fade-out {
+      animation: fadeOut 1s ease-in forwards;
+    }
+
+    .hidden-section {
+      display: none;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeSlideIn 1.5s ease-out forwards;
+      animation-delay: 10s;
+      animation-fill-mode: forwards;
+    }
+
+    .choice {
+      margin-top: 30px;
+    }
+
+    .choice label {
+      margin: 0 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .input-section {
+      margin-top: 20px;
+    }
+
+    input[type="text"],
+    button {
+      background-color: #000;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      font-size: 16px;
+      width: 250px;
+      margin: 5px;
+      transition: all 0.2s ease;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #00ff00;
+      color: #000;
+      transform: scale(1.03);
+    }
+
+    #verify-response {
+      margin-top: 20px;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    /* FASE 1 Text Style */
+    .fase-text {
+      text-align: center;
+      font-size: 80px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .click-text {
+      font-size: 40px;
+      opacity: 1;
+      transform: translateY(0);
+      cursor: pointer;
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Start Screen with Outline -->
+  <div class="start-screen" id="startScreen">
+    <div class="fase-text" id="faseText">
+      <u>FASE 1</u>
+    </div>
+    <div class="click-text" id="clickText">
+      <small>Clique para começar</small>
+    </div>
+  </div>
+
+  <div class="terminal">
+    <div class="message" id="message1">
+      Ele não te vê, mas ele sabe onde você está.
+    </div>
+
+    <div class="message" id="message2">
+      Encontre-o na sala fechada. Boa sorte.
+    </div>
+
+    <div class="hidden-section" id="formSection">
+      <div class="choice">
+        <label><input type="radio" name="choice" value="yes"> SIM</label>
+        <label><input type="radio" name="choice" value="no"> NÃO</label>
+      </div>
+
+      <div class="input-section">
+        <input type="text" id="artifactId" placeholder="ID do Artefato">
+        <button onclick="verify()">VERIFIQUE</button>
+      </div>
+
+      <div id="verify-response"></div>
+    </div>
+  </div>
+  <audio id="scaryAudio" src="scary.mp3" preload="auto"></audio>
+  <audio id="click" src="click.mp3" preload="auto"></audio>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const startScreen = document.getElementById('startScreen');
+      const faseText = document.getElementById('faseText');
+      const clickText = document.getElementById('clickText');
+      const msg1 = document.getElementById('message1');
+      const msg2 = document.getElementById('message2');
+      const form = document.getElementById('formSection');
+      const body = document.body;
+      const scaryAudio = document.getElementById('scaryAudio');
+      const click = document.getElementById('click');
+
+      function playClickSound() {
+        click.play().catch(err => console.warn("Autoplay blocked:", err));
+      }
+      document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(el => {
+        el.addEventListener('change', playClickSound);
+      });
+
+      // Play sound when text input is focused or typed into
+      document.querySelectorAll('input[type="text"]').forEach(el => {
+        el.addEventListener('focus', playClickSound);
+        el.addEventListener('input', () => {
+          if (!click.paused) return;
+          playClickSound();
+        });
+      });
+      // Show "FASE 1" and "Clique para começar" immediately
+      faseText.style.opacity = 1;
+      clickText.style.opacity = 1;
+
+      // Wait for user click on "Clique para começar"
+      clickText.addEventListener('click', () => {
+        // Hide the start screen after click
+        startScreen.style.display = 'none';
+
+        // Remove the green outline from the body after the start screen disappears
+        body.style.border = 'none';
+        click.play().catch(err => console.warn("Autoplay blocked:", err));
+
+        // Show message 1 with animation after 1 second delay
+        setTimeout(() => {
+          msg1.classList.add('slide-fade-in', 'glitch');
+          scaryAudio.play().catch(err => console.warn("Autoplay blocked:", err));
+      }, 1000);
+
+        // Show message 2 with animation after 6 seconds
+        setTimeout(() => {
+          msg2.classList.add('slide-fade-in');
+        }, 6000);
+
+        // Show the form after the second message fades out (at 12 seconds)
+        setTimeout(() => {
+          form.style.display = 'block';
+        }, 12000);
+      });
+    });
+
+    function verify() {
+      const choice = document.querySelector('input[name="choice"]:checked');
+      const artifact = document.getElementById('artifactId').value.trim().toLowerCase();
+      const response = document.getElementById('verify-response');
+      const rs = response.textContent
+
+      click.play().catch(err => console.warn("Autoplay blocked:", err));
+
+      if (!choice) {
+        response.textContent = "> Por favor selecione SIM ou NÃO.";
+        return;
+      }
+
+      if (!artifact) {
+        response.textContent = "> Por favor insira o ID do artefato.";
+        return;
+      }
+
+      if (choice.value.toLowerCase() === "no" && artifact === "nq") {
+        response.textContent = "\n> Analisando artefato...\n> Verificações registradas e aprovadas.\n> Artefato validado com sucesso.\n> Iniciando protocolo de recuperação..."
+        setTimeout(() => {
+          window.location.href = "2.html";
+        }, 3000);
+      } else {
+        response.textContent = "\n> Analisando artefato...\n> Artefato invalido.\n> Acesso negado."
+      }
+    }
+  </script>
+</body>
+</html>

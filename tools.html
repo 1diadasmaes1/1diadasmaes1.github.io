@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GUILISOFT // DECODER TOOLS</title>
+  <link rel="stylesheet" href="assets/css/terminal.css">
+  <style>
+    body { overflow-y: auto; }
+
+    .page {
+      max-width: 1100px;
+      margin: 40px auto 80px;
+      padding: 0 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .header {
+      margin-bottom: 30px;
+    }
+    .header .brand {
+      font-size: 11px;
+      letter-spacing: 4px;
+      opacity: 0.7;
+    }
+    .header h1 {
+      margin: 4px 0 8px;
+      font-size: 32px;
+      letter-spacing: 3px;
+      text-shadow: 0 0 6px #00ff00;
+    }
+    .header .sub {
+      font-size: 13px;
+      opacity: 0.7;
+      font-style: italic;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 30px;
+    }
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      border: 1px solid #00ff00;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.25);
+      padding: 18px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .card.active {
+      border-color: #80ff80;
+      box-shadow: 0 0 16px #00ff00;
+    }
+    .card .label {
+      font-size: 11px;
+      letter-spacing: 4px;
+      opacity: 0.65;
+      margin-bottom: 4px;
+    }
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      letter-spacing: 2px;
+      text-shadow: 0 0 4px #00ff00;
+    }
+    .card .meta {
+      font-size: 11px;
+      opacity: 0.5;
+      font-style: italic;
+      margin-bottom: 10px;
+      min-height: 14px;
+    }
+    .card textarea {
+      background: #000;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      width: 100%;
+      min-height: 110px;
+      resize: vertical;
+      letter-spacing: 1px;
+      line-height: 1.5;
+    }
+    .card textarea:focus {
+      outline: none;
+      border-color: #80ff80;
+      box-shadow: 0 0 6px #00ff00;
+    }
+    .card .actions {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+      font-size: 11px;
+    }
+    .card .btn {
+      background: transparent;
+      color: #00ff00;
+      border: 1px solid rgba(0, 255, 0, 0.5);
+      padding: 4px 10px;
+      font-family: inherit;
+      font-size: 11px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      width: auto;
+      margin: 0;
+      transition: all 0.2s;
+    }
+    .card .btn:hover {
+      background: rgba(0, 255, 0, 0.1);
+      border-color: #00ff00;
+    }
+    .card.error textarea {
+      border-color: #ff6060;
+      box-shadow: 0 0 4px rgba(255, 0, 0, 0.4);
+    }
+
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 11px;
+      opacity: 0.5;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+
+  <div class="page glow">
+    <div class="header">
+      <div class="brand">GUILISOFT v4.σ // ARQUIVO INTERNO</div>
+      <h1>DECODER TOOLS</h1>
+      <div class="sub">digite em qualquer painel — os outros traduzem em tempo real.</div>
+    </div>
+
+    <div class="grid">
+
+      <div class="card" data-name="text">
+        <div class="label">// FONTE</div>
+        <h3>TEXTO</h3>
+        <div class="meta">utf-8 puro</div>
+        <textarea id="textArea" placeholder=""></textarea>
+        <div class="actions">
+          <button class="btn" data-copy="textArea">COPIAR</button>
+          <button class="btn" data-clear="textArea">LIMPAR</button>
+        </div>
+      </div>
+
+      <div class="card" data-name="morse">
+        <div class="label">// CODIFICAÇÃO 01</div>
+        <h3>MORSE</h3>
+        <div class="meta">letras separadas por espaço · "/" entre palavras</div>
+        <textarea id="morseArea" placeholder=""></textarea>
+        <div class="actions">
+          <button class="btn" data-copy="morseArea">COPIAR</button>
+          <button class="btn" data-clear="morseArea">LIMPAR</button>
+        </div>
+      </div>
+
+      <div class="card" data-name="b64">
+        <div class="label">// CODIFICAÇÃO 02</div>
+        <h3>BASE64</h3>
+        <div class="meta">a–z A–Z 0–9 + / =</div>
+        <textarea id="b64Area" placeholder=""></textarea>
+        <div class="actions">
+          <button class="btn" data-copy="b64Area">COPIAR</button>
+          <button class="btn" data-clear="b64Area">LIMPAR</button>
+        </div>
+      </div>
+
+      <div class="card" data-name="hex">
+        <div class="label">// CODIFICAÇÃO 03</div>
+        <h3>HEXADECIMAL</h3>
+        <div class="meta">pares 0-F · espaço entre bytes (opcional)</div>
+        <textarea id="hexArea" placeholder=""></textarea>
+        <div class="actions">
+          <button class="btn" data-copy="hexArea">COPIAR</button>
+          <button class="btn" data-clear="hexArea">LIMPAR</button>
+        </div>
+      </div>
+
+      <div class="card" data-name="bin">
+        <div class="label">// CODIFICAÇÃO 04</div>
+        <h3>BINÁRIO</h3>
+        <div class="meta">8 bits por caractere · espaço entre bytes</div>
+        <textarea id="binArea" placeholder=""></textarea>
+        <div class="actions">
+          <button class="btn" data-copy="binArea">COPIAR</button>
+          <button class="btn" data-clear="binArea">LIMPAR</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      // arquivo interno — uso autorizado: Funcionária 001
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      encodeMorse, decodeMorse,
+      encodeB64, decodeB64,
+      encodeHex, decodeHex,
+      encodeBin, decodeBin
+    } from './assets/js/decoders.js';
+
+    const textArea  = document.getElementById('textArea');
+    const morseArea = document.getElementById('morseArea');
+    const b64Area   = document.getElementById('b64Area');
+    const hexArea   = document.getElementById('hexArea');
+    const binArea   = document.getElementById('binArea');
+
+    const cards = {
+      text:  textArea.closest('.card'),
+      morse: morseArea.closest('.card'),
+      b64:   b64Area.closest('.card'),
+      hex:   hexArea.closest('.card'),
+      bin:   binArea.closest('.card'),
+    };
+
+    let updating = false;
+
+    function setActive(name) {
+      Object.values(cards).forEach(c => c.classList.remove('active'));
+      if (name) cards[name].classList.add('active');
+    }
+
+    function setError(name, hasError) {
+      cards[name].classList.toggle('error', hasError);
+    }
+
+    function distributeFromText(text) {
+      morseArea.value = text ? encodeMorse(text) : '';
+      b64Area.value   = text ? encodeB64(text)   : '';
+      hexArea.value   = text ? encodeHex(text)   : '';
+      binArea.value   = text ? encodeBin(text)   : '';
+      ['morse', 'b64', 'hex', 'bin'].forEach(n => setError(n, false));
+    }
+
+    textArea.addEventListener('focus', () => setActive('text'));
+    morseArea.addEventListener('focus', () => setActive('morse'));
+    b64Area.addEventListener('focus', () => setActive('b64'));
+    hexArea.addEventListener('focus', () => setActive('hex'));
+    binArea.addEventListener('focus', () => setActive('bin'));
+
+    textArea.addEventListener('input', () => {
+      if (updating) return;
+      updating = true;
+      setError('text', false);
+      distributeFromText(textArea.value);
+      updating = false;
+    });
+
+    morseArea.addEventListener('input', () => {
+      if (updating) return;
+      updating = true;
+      const text = decodeMorse(morseArea.value);
+      // detect invalid tokens
+      const tokens = morseArea.value.trim().split(/\s+/).filter(Boolean);
+      const hasInvalid = morseArea.value.trim().length > 0 &&
+        tokens.some(t => t !== '/' && !/^[.\-]+$/.test(t));
+      setError('morse', hasInvalid);
+      textArea.value = text;
+      b64Area.value = text ? encodeB64(text) : '';
+      hexArea.value = text ? encodeHex(text) : '';
+      updating = false;
+    });
+
+    b64Area.addEventListener('input', () => {
+      if (updating) return;
+      updating = true;
+      const raw = b64Area.value.trim();
+      const text = decodeB64(raw);
+      const isInvalid = raw.length > 0 && !/^[A-Za-z0-9+/=\s]+$/.test(raw);
+      setError('b64', isInvalid);
+      textArea.value = text;
+      morseArea.value = text ? encodeMorse(text) : '';
+      hexArea.value   = text ? encodeHex(text)   : '';
+      updating = false;
+    });
+
+    hexArea.addEventListener('input', () => {
+      if (updating) return;
+      updating = true;
+      const cleaned = hexArea.value.replace(/\s+/g, '').replace(/^0x/i, '');
+      const isInvalid = cleaned.length > 0 && !/^[0-9A-Fa-f]+$/.test(cleaned);
+      setError('hex', isInvalid);
+      const text = decodeHex(hexArea.value);
+      textArea.value = text;
+      morseArea.value = text ? encodeMorse(text) : '';
+      b64Area.value   = text ? encodeB64(text)   : '';
+      binArea.value   = text ? encodeBin(text)   : '';
+      updating = false;
+    });
+
+    binArea.addEventListener('input', () => {
+      if (updating) return;
+      updating = true;
+      const cleaned = binArea.value.replace(/\s+/g, '');
+      const isInvalid = cleaned.length > 0 && !/^[01]+$/.test(cleaned);
+      setError('bin', isInvalid);
+      const text = decodeBin(binArea.value);
+      textArea.value = text;
+      morseArea.value = text ? encodeMorse(text) : '';
+      b64Area.value   = text ? encodeB64(text)   : '';
+      hexArea.value   = text ? encodeHex(text)   : '';
+      updating = false;
+    });
+
+    // Copy / clear buttons
+    document.querySelectorAll('[data-copy]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const target = document.getElementById(btn.dataset.copy);
+        try {
+          await navigator.clipboard.writeText(target.value);
+          const original = btn.textContent;
+          btn.textContent = 'COPIADO';
+          setTimeout(() => { btn.textContent = original; }, 1200);
+        } catch {
+          target.select();
+          document.execCommand('copy');
+        }
+      });
+    });
+
+    document.querySelectorAll('[data-clear]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = document.getElementById(btn.dataset.clear);
+        target.value = '';
+        target.dispatchEvent(new Event('input'));
+        target.focus();
+      });
+    });
+  </script>
+</body>
+</html>

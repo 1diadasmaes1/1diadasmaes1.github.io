@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>ÚLTIMA FASE</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    body {
+      background-color: #000;
+      color: #00ff00;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
+      overflow: hidden;
+      border: 3px solid #00ff00;
+      transition: border 0.5s ease-in-out;
+      position: relative;
+    }
+    .start-screen {
+      position: absolute;
+      background-color: #000;
+      color: #00ff00;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      text-align: center;
+      width: 100%;
+      height: 100%;
+    }
+    .fase-text { font-size: 80px; }
+    .click-text { font-size: 40px; cursor: pointer; }
+    .terminal { padding: 0; width: 600px; text-align: center; }
+    .message { font-size: 30px; opacity: 0; }
+    .slide-fade-in { animation: fadeSlideIn 1.5s ease-out forwards; }
+    .timer {
+      font-size: 36px;
+      margin-top: 40px;
+      opacity: 0;
+      transition: opacity 1s ease;
+      padding: 10px 20px;
+      border: 2px solid transparent;
+    }
+    .timer.visible { opacity: 1; }
+    .timer.glow {
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+    }
+    .failure-message {
+      margin-top: 20px;
+      font-size: 16px;
+      white-space: pre-wrap;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    .failure-message.visible { opacity: 1; }
+    .red-flash {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: red;
+      opacity: 0;
+      z-index: 1000;
+      animation: flashRed 1s ease-out forwards;
+    }
+    .start-timer-btn {
+      background-color: #000;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px 20px;
+      font-size: 18px;
+      margin-top: 20px;
+      cursor: pointer;
+      display: none;
+      transition: all 0.2s ease;
+    }
+    .start-timer-btn:hover { background-color: #00ff00; color: #000; }
+    .form-section { margin-top: 30px; }
+    .choice label { margin: 0 20px; font-size: 16px; cursor: pointer; }
+    input[type="text"], button {
+      background-color: #000;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      font-size: 16px;
+      width: 250px;
+      margin: 5px;
+      transition: all 0.2s ease;
+    }
+    button:hover { background-color: #00ff00; color: #000; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes flashRed {
+      0% { opacity: 0; }
+      30% { opacity: 0.9; }
+      70% { opacity: 0.3; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="start-screen" id="startScreen">
+    <div class="fase-text"><u>ÚLTIMA FASE</u></div>
+    <div class="click-text"><small>Clique para começar</small></div>
+  </div>
+
+  <div class="terminal">
+    <div class="message" id="message1">No ponto mais alto da residência e na borda do complexo, os tesouros você encontrará.</div>
+    <div class="message" id="message2">Pense fora da cas(ix)a. Boa sorte.</div>
+    <div class="timer" id="timer" style="margin-bottom: 10px;">10:00</div>
+    <button class="start-timer-btn" id="startTimerBtn">INICIAR TIMER</button>
+
+    <div class="form-section" id="formSection" style="display: none; text-align: center; margin-top: 20px;" style="display: none;">
+      <div class="choice">
+        <label><input type="radio" name="choice" value="yes"> SIM</label>
+        <label><input type="radio" name="choice" value="no"> NÃO</label>
+      </div>
+      <div class="input-section" style="margin-top: 20px;">
+        <input type="text" id="artifactId" placeholder="ID do Artefato">
+        <button onclick="verify()">VERIFIQUE</button>
+      </div>
+    </div>
+
+    <div class="failure-message" id="failureMessage"></div>
+  </div>
+
+  <div id="redFlash" class="red-flash" style="display: none;"></div>
+
+  <audio id="voice" src="4voice.mp3" preload="auto"></audio>
+  <audio id="music" src="4music.mp3" preload="auto" loop></audio>
+  <audio id="click" src="click.mp3" preload="auto"></audio>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const startScreen = document.getElementById('startScreen');
+      const message1 = document.getElementById('message1');
+      const message2 = document.getElementById('message2');
+      const timerEl = document.getElementById('timer');
+      const failureEl = document.getElementById('failureMessage');
+      const redFlash = document.getElementById('redFlash');
+      const body = document.body;
+      const click = document.getElementById('click');
+      const clockAudio = document.getElementById('clockAudio');
+      const music = document.getElementById('music');
+      const startTimerBtn = document.getElementById('startTimerBtn');
+      const formSection = document.getElementById('formSection');
+      const voice = document.getElementById('voice');
+
+      function startTimer(duration, display) {
+        let timer = duration;
+        const interval = setInterval(() => {
+          const minutes = String(Math.floor(timer / 60)).padStart(2, '0');
+          const seconds = String(timer % 60).padStart(2, '0');
+          display.textContent = `${minutes}:${seconds}`;
+          if (--timer < 0) {
+            clearInterval(interval);
+            display.textContent = "00:00";
+            triggerFailureSequence();
+          }
+        }, 1000);
+      }
+
+      function triggerFailureSequence() {
+        redFlash.style.display = 'block';
+        failureEl.classList.add('visible');
+        failureEl.textContent = "> Tempo esgotado.\n> O artefato não foi recuperado.\n> Encerrando protocolo...";
+        music.pause()
+        music.currentTime = 0;
+
+        setTimeout(() => {
+          window.location.href = "start.html";
+        }, 3000);
+      }
+
+      document.querySelector('.click-text').addEventListener('click', () => {
+        startScreen.style.display = 'none';
+        body.style.border = 'none';
+        click.play().catch(() => {});
+        setTimeout(() => {
+          message1.classList.add('slide-fade-in');
+          music.volume = 0.6
+          music.play().catch(() => {});
+          voice.play().catch(() => {});
+        }, 1000);
+        setTimeout(() => {
+          message2.classList.add('slide-fade-in');
+        }, 5000);
+        setTimeout(() => {
+          timerEl.classList.add('visible');
+          startTimerBtn.style.display = 'inline-block';
+          // form will now be shown after timer starts
+        }, 8000);
+      });
+
+      startTimerBtn.addEventListener('click', () => {
+        click.play().catch(() => {});
+        timerEl.classList.add('glow');
+        startTimer(10 * 60, timerEl);
+        startTimerBtn.style.display = 'none';
+        formSection.style.display = 'block';
+        click.play().catch(() => {});
+        timerEl.classList.add('glow');
+        startTimer(10 * 60, timerEl);
+        startTimerBtn.style.display = 'none';
+      });
+    });
+
+    function verify() {
+      const choice = document.querySelector('input[name="choice"]:checked');
+      const artifact = document.getElementById('artifactId').value.trim().toLowerCase();
+      const response = document.getElementById('failureMessage');
+
+      click.play().catch(() => {});
+
+      if (!choice) {
+        response.classList.add("visible");
+        response.textContent = "> Por favor selecione SIM ou NÃO.";
+        return;
+      }
+
+      if (!artifact) {
+        response.classList.add("visible");
+        response.textContent = "> Por favor insira o ID do artefato.";
+        return;
+      }
+
+      if (choice.value === "yes" && artifact === "x4") {
+        response.classList.add("visible");
+        response.textContent = "\n> Analisando artefato...\n> Verificações registradas e aprovadas.\n> Artefato validado com sucesso.\n> Iniciando protocolo de recuperação..."
+        setTimeout(() => {
+          window.location.href = "final.html";
+        }, 3000);
+      } else {
+        response.classList.add("visible");
+        response.textContent = "\n> Analisando artefato...\n> Artefato invalido.\n> Acesso negado."
+      }
+    }
+  </script>
+</body>
+</html>

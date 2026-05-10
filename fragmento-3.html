@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARQUIVO EXTERNO // σ4</title>
+  <link rel="stylesheet" href="assets/css/terminal.css">
+  <style>
+    body { overflow-y: auto; }
+
+    .page {
+      max-width: 760px;
+      margin: 50px auto 80px;
+      padding: 0 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .billy-block {
+      margin-bottom: 24px;
+      min-height: 100px;
+    }
+    .billy-line {
+      font-size: 16px;
+      line-height: 1.7;
+      animation: fadeSlideIn 0.6s;
+    }
+
+    .panel {
+      border: 1px solid #00ff00;
+      box-shadow: 0 0 12px rgba(0, 255, 0, 0.3);
+      padding: 22px;
+      margin-bottom: 24px;
+      transition: border-color 0.4s, box-shadow 0.4s;
+    }
+    .panel.hidden { display: none; }
+    .panel.completed {
+      border-color: #80ff80;
+      box-shadow: 0 0 18px #00ff00;
+    }
+    .panel h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      letter-spacing: 2px;
+    }
+    .panel .label {
+      font-size: 11px;
+      letter-spacing: 3px;
+      opacity: 0.7;
+      margin-bottom: 6px;
+    }
+    .panel .hint {
+      font-size: 12px;
+      opacity: 0.6;
+      font-style: italic;
+      margin-bottom: 14px;
+    }
+    .panel textarea, .panel input[type="text"] {
+      background: #000;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 14px;
+      width: 100%;
+      resize: vertical;
+    }
+    .panel textarea { min-height: 60px; }
+    .panel textarea:focus, .panel input:focus {
+      outline: none;
+      border-color: #80ff80;
+      box-shadow: 0 0 6px #00ff00;
+    }
+    .panel .status {
+      margin-top: 14px;
+      font-size: 13px;
+      letter-spacing: 2px;
+      opacity: 0.7;
+      min-height: 18px;
+    }
+    .panel .status.error {
+      color: #ff6060;
+      animation: flashRed 0.4s;
+    }
+    .panel .verify-btn {
+      margin-top: 12px;
+      padding: 8px 18px;
+      width: auto;
+      font-size: 13px;
+      letter-spacing: 2px;
+    }
+    .start-mission-btn {
+      margin-top: 24px;
+      padding: 14px 26px;
+      font-size: 15px;
+      letter-spacing: 3px;
+      width: auto;
+      border-color: #ffcc00;
+      color: #ffcc00;
+      box-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
+    }
+    .start-mission-btn:hover {
+      background: #ffcc00;
+      color: #000;
+    }
+
+    .timer-box {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #000;
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 14px #00ff00;
+      padding: 14px 22px;
+      font-size: 32px;
+      letter-spacing: 4px;
+      z-index: 50;
+      display: none;
+      animation: fadeSlideIn 0.6s;
+      font-weight: bold;
+    }
+    .timer-box.show { display: block; }
+    .timer-box .label {
+      font-size: 11px;
+      letter-spacing: 3px;
+      opacity: 0.7;
+      font-weight: normal;
+    }
+    .timer-box.warn {
+      color: #ffcc00;
+      border-color: #ffcc00;
+      box-shadow: 0 0 12px #ffcc00;
+      animation: blink 1s step-end infinite;
+    }
+    .timer-box.danger {
+      color: #ff3030;
+      border-color: #ff3030;
+      box-shadow: 0 0 16px #ff3030;
+      animation: blink 0.5s step-end infinite;
+    }
+    body.timer-failed {
+      animation: flashRed 0.6s ease-in-out 3;
+    }
+
+    .pista-img {
+      margin: 16px 0;
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.4);
+      max-width: 100%;
+      display: block;
+      background: #001500;
+      min-height: 200px;
+    }
+    .pista-placeholder {
+      padding: 60px 20px;
+      text-align: center;
+      font-size: 13px;
+      opacity: 0.5;
+      font-style: italic;
+      letter-spacing: 2px;
+    }
+
+    .fail-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 0, 0, 0.15);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+    .fail-overlay.show { display: flex; }
+    .fail-overlay .msg {
+      font-size: 38px;
+      color: #ff3030;
+      text-shadow: 0 0 10px #ff0000;
+      letter-spacing: 4px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .fail-overlay button {
+      width: auto;
+      padding: 14px 28px;
+      font-size: 16px;
+      letter-spacing: 2px;
+      border-color: #ff3030;
+      color: #ff3030;
+    }
+    .fail-overlay button:hover {
+      background: #ff3030;
+      color: #000;
+    }
+
+    .resolved {
+      margin-top: 30px;
+      padding: 24px;
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 16px #00ff00;
+      text-align: center;
+      display: none;
+      animation: fadeSlideIn 1s;
+    }
+    .resolved.show { display: block; }
+    .resolved .label {
+      font-size: 12px;
+      letter-spacing: 3px;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    .resolved .word {
+      font-size: 30px;
+      letter-spacing: 4px;
+      margin-bottom: 18px;
+      text-shadow: 0 0 8px #00ff00;
+    }
+
+    .action-btn {
+      padding: 14px 24px;
+      font-size: 16px;
+      letter-spacing: 2px;
+      width: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+
+  <a href="tools.html" target="_blank" class="tools-link">// TOOLS</a>
+
+  <div class="timer-box glow" id="timerBox">
+    <div class="label">TEMPO RESTANTE</div>
+    <div id="timerDisplay">7:00</div>
+  </div>
+
+  <div class="page">
+    <div class="billy-block glow" id="billyBlock"></div>
+
+    <!-- ETAPA A: hex do TikTok -->
+    <div class="panel" id="panelA">
+      <div class="label">ETAPA A — ARQUIVO EXTERNO</div>
+      <h3>// MENSAGEM DO VÍDEO</h3>
+      <textarea id="hexInput" placeholder="" autocomplete="off" spellcheck="false"></textarea>
+      <button class="verify-btn" id="hexVerifyBtn">&gt; VERIFICAR</button>
+      <div class="status" id="hexStatus"></div>
+    </div>
+
+    <!-- INTERLUDE: ela confirma que vai partir → timer começa -->
+    <div class="panel hidden" id="panelInterlude">
+      <div class="label">// COORDENADA FÍSICA REVELADA</div>
+      <h3>// SETOR LOCALIZADO</h3>
+      <div id="interludeBilly" style="margin-bottom: 14px;"></div>
+
+      <div id="pistaContainer">
+        <img class="pista-img" id="pistaImg" src="assets/img/foto-pista.jpg" alt="foto-pista" style="display:none;">
+        <div class="pista-placeholder" id="pistaPlaceholder">
+          [ assets/img/foto-pista.jpg — substituir por foto real do ponto do condomínio antes do dia 10 ]
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; opacity: 0.8; font-size: 13px;">
+        ao confirmar partida, um timer começará. recolha o envelope e volte antes de zerar.
+      </div>
+
+      <button class="start-mission-btn" id="startMissionBtn">&gt; PARTI</button>
+    </div>
+
+    <!-- ETAPA B: morse do condomínio (locked initially) -->
+    <div class="panel hidden" id="panelB">
+      <div class="label">ETAPA B — RECOMBINAÇÃO</div>
+      <h3>// SINAL RECONSTRUÍDO</h3>
+      <div style="font-size: 13px; opacity: 0.6; font-style: italic; margin-bottom: 12px;">
+        recombine os pedaços do envelope, decodifique, digite o resultado.
+      </div>
+      <textarea id="morseInput" placeholder="" autocomplete="off" spellcheck="false"></textarea>
+      <button class="verify-btn" id="morseVerifyBtn">&gt; VERIFICAR</button>
+      <div class="status" id="morseStatus"></div>
+    </div>
+
+    <div class="resolved glow" id="resolved">
+      <div class="label">// FRAGMENTO V — RECUPERADO</div>
+      <div class="word" id="resolvedWord"></div>
+      <div id="closingBilly" style="margin-bottom: 20px;"></div>
+      <button class="action-btn glow" id="nextBtn" style="display:none;">
+        &gt; ABRIR SETOR 7
+      </button>
+    </div>
+  </div>
+
+  <div class="fail-overlay" id="failOverlay">
+    <div class="msg">> TEMPO EXPIRADO<br>SETOR REINICIALIZANDO</div>
+    <button id="retryBtn">&gt; TENTAR NOVAMENTE</button>
+  </div>
+
+  <audio id="ambient" loop preload="auto">
+    <source src="assets/audio/clock.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="successFx" preload="auto">
+    <source src="assets/audio/click.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="warmFx" preload="auto">
+    <source src="assets/audio/warm.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="billyVoiceTiktok" preload="auto">
+    <source src="assets/audio/sgt-billy-tiktok.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="billyVoiceTimer" preload="auto">
+    <source src="assets/audio/sgt-billy-timer.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="alarmFx" preload="auto">
+    <source src="assets/audio/scary.mp3" type="audio/mpeg">
+  </audio>
+
+  <script type="module">
+    import { typeLines, wait } from './assets/js/typewriter.js';
+    import { CONFIG } from './assets/js/config.js';
+    import { normalize } from './assets/js/decoders.js';
+    import { playSuccess, playError, playBigSuccess, pulseSuccess, shakeError } from './assets/js/feedback.js';
+
+    const ambient = document.getElementById('ambient');
+    const successFx = document.getElementById('successFx');
+    const warmFx = document.getElementById('warmFx');
+    const alarmFx = document.getElementById('alarmFx');
+    const billyVoiceTiktok = document.getElementById('billyVoiceTiktok');
+    const billyVoiceTimer = document.getElementById('billyVoiceTimer');
+    ambient.volume = 0.08;
+    successFx.volume = 0.4;
+    warmFx.volume = 0.5;
+    alarmFx.volume = 0.4;
+    billyVoiceTiktok.volume = 0.85;
+    billyVoiceTimer.volume = 0.85;
+
+    const billyBlock = document.getElementById('billyBlock');
+    const panelA = document.getElementById('panelA');
+    const panelInterlude = document.getElementById('panelInterlude');
+    const panelB = document.getElementById('panelB');
+    const interludeBilly = document.getElementById('interludeBilly');
+    const startMissionBtn = document.getElementById('startMissionBtn');
+    const hexInput = document.getElementById('hexInput');
+    const hexVerifyBtn = document.getElementById('hexVerifyBtn');
+    const hexStatus = document.getElementById('hexStatus');
+    const morseInput = document.getElementById('morseInput');
+    const morseVerifyBtn = document.getElementById('morseVerifyBtn');
+    const morseStatus = document.getElementById('morseStatus');
+    const timerBox = document.getElementById('timerBox');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const failOverlay = document.getElementById('failOverlay');
+    const retryBtn = document.getElementById('retryBtn');
+    const resolved = document.getElementById('resolved');
+    const resolvedWord = document.getElementById('resolvedWord');
+    const closingBilly = document.getElementById('closingBilly');
+    const nextBtn = document.getElementById('nextBtn');
+
+    const EXPECTED_HEX = CONFIG.TIKTOK_HEX_WORD;
+    const EXPECTED_CONDO = CONFIG.CONDOMINIO_WORD;
+    const TIMER_SECONDS = CONFIG.CONDOMINIO_TIMER;
+
+    const introLines = [
+      '> O próximo fragmento está fora desta rede.',
+      '> Procure sua conta antiga.',
+      '> Veja o último vídeo.',
+      '> Anote o código. Volte aqui.',
+    ];
+
+    const interludeLines = [
+      '> Coordenada física revelada.',
+      '> O envelope está no setor abaixo.',
+      ' ',
+      '> Quando confirmar partida, o cronômetro começa.',
+      '> Não confirme antes de estar pronta.',
+    ];
+
+    const closingLines = [
+      '> Coordenadas confirmadas.',
+      '> Você ainda é mais rápida que a rede.',
+      ' ',
+      '> Resta uma coisa. A última.',
+    ];
+
+    let timerInterval = null;
+    let timerSecondsLeft = TIMER_SECONDS;
+    let resolvedYet = false;
+
+    (async () => {
+      ambient.play().catch(() => {});
+      billyVoiceTiktok.currentTime = 0;
+      billyVoiceTiktok.play().catch(() => {});
+      await wait(400);
+      await typeLines(billyBlock, introLines, {
+        speed: 35, jitter: 15, linePause: 500
+      });
+    })();
+
+    // === ETAPA A: hex do TikTok ===
+    let hexUnlocked = false;
+    async function verifyHex() {
+      if (hexUnlocked) return;
+      const guess = hexInput.value;
+      if (!guess.trim()) {
+        hexStatus.textContent = '[ campo vazio ]';
+        return;
+      }
+
+      if (normalize(guess) === normalize(EXPECTED_HEX)) {
+        hexUnlocked = true;
+        playSuccess();
+        pulseSuccess(panelA);
+        hexStatus.textContent = '> validado.';
+        hexInput.disabled = true;
+        hexVerifyBtn.disabled = true;
+
+        panelA.classList.add('completed');
+
+        await wait(700);
+
+        // Show interlude panel: pista + start mission button
+        panelInterlude.classList.remove('hidden');
+
+        const pistaImg = document.getElementById('pistaImg');
+        const pistaPlaceholder = document.getElementById('pistaPlaceholder');
+        pistaImg.onload = () => {
+          pistaImg.style.display = 'block';
+          pistaPlaceholder.style.display = 'none';
+        };
+        pistaImg.src = pistaImg.src;
+
+        await typeLines(interludeBilly, interludeLines, {
+          speed: 35, jitter: 15, linePause: 500
+        });
+
+        panelInterlude.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        hexStatus.textContent = '> mensagem inválida.';
+        hexStatus.classList.add('error');
+        playError();
+        shakeError(panelA);
+        setTimeout(() => hexStatus.classList.remove('error'), 600);
+      }
+    }
+    hexVerifyBtn.addEventListener('click', verifyHex);
+    hexInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); verifyHex(); }
+    });
+
+    // === START MISSION (libera etapa B + começa timer) ===
+    startMissionBtn.addEventListener('click', () => {
+      successFx.currentTime = 0;
+      successFx.play().catch(() => {});
+      startMissionBtn.disabled = true;
+      startMissionBtn.textContent = '> CRONÔMETRO ATIVO';
+
+      // voz do Billy gritando "CORRA"
+      billyVoiceTimer.currentTime = 0;
+      billyVoiceTimer.play().catch(() => {});
+
+      panelB.classList.remove('hidden');
+      startTimer();
+      panelB.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // === TIMER ===
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${m}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      timerSecondsLeft = TIMER_SECONDS;
+      timerBox.classList.add('show');
+      timerBox.classList.remove('warn', 'danger');
+      document.body.classList.add('timer-running');
+      document.body.classList.remove('timer-danger', 'timer-failed');
+      timerDisplay.textContent = formatTime(timerSecondsLeft);
+
+      alarmFx.currentTime = 0;
+      alarmFx.play().catch(() => {});
+
+      timerInterval = setInterval(() => {
+        timerSecondsLeft--;
+        timerDisplay.textContent = formatTime(timerSecondsLeft);
+
+        if (timerSecondsLeft <= 60 && !timerBox.classList.contains('danger')) {
+          timerBox.classList.remove('warn');
+          timerBox.classList.add('danger');
+          document.body.classList.remove('timer-running');
+          document.body.classList.add('timer-danger');
+        } else if (timerSecondsLeft <= 120 && !timerBox.classList.contains('warn')) {
+          timerBox.classList.add('warn');
+        }
+
+        if (timerSecondsLeft <= 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          failTimer();
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      alarmFx.pause();
+      document.body.classList.remove('timer-running', 'timer-danger');
+      timerBox.classList.remove('warn', 'danger');
+    }
+
+    function failTimer() {
+      stopTimer();
+      document.body.classList.add('timer-failed');
+      failOverlay.classList.add('show');
+      morseInput.value = '';
+      morseStatus.textContent = '';
+    }
+
+    retryBtn.addEventListener('click', () => {
+      successFx.currentTime = 0;
+      successFx.play().catch(() => {});
+      failOverlay.classList.remove('show');
+      document.body.classList.remove('timer-failed');
+      startTimer();
+    });
+
+    // === ETAPA B: morse do condomínio (silent) ===
+    async function verifyMorse() {
+      if (resolvedYet) return;
+      const guess = morseInput.value;
+      if (!guess.trim()) {
+        morseStatus.textContent = '[ campo vazio ]';
+        return;
+      }
+
+      if (normalize(guess) === normalize(EXPECTED_CONDO)) {
+        resolvedYet = true;
+        stopTimer();
+        timerBox.classList.remove('show');
+
+        playBigSuccess();
+        pulseSuccess(panelB);
+        warmFx.currentTime = 0;
+        warmFx.play().catch(() => {});
+
+        morseStatus.textContent = '> validado.';
+        morseInput.disabled = true;
+        morseVerifyBtn.disabled = true;
+        panelB.classList.add('completed');
+
+        await wait(700);
+        resolved.classList.add('show');
+
+        for (const ch of EXPECTED_CONDO) {
+          resolvedWord.textContent += ch;
+          await wait(80 + Math.random() * 50);
+        }
+
+        await wait(800);
+        await typeLines(closingBilly, closingLines, {
+          speed: 35, jitter: 15, linePause: 500
+        });
+
+        await wait(500);
+        nextBtn.style.display = 'inline-block';
+        resolved.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        morseStatus.textContent = '> mensagem inválida.';
+        morseStatus.classList.add('error');
+        playError();
+        shakeError(panelB);
+        setTimeout(() => morseStatus.classList.remove('error'), 600);
+      }
+    }
+    morseVerifyBtn.addEventListener('click', verifyMorse);
+    morseInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); verifyMorse(); }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      successFx.currentTime = 0;
+      successFx.play().catch(() => {});
+      document.body.style.transition = 'opacity 0.6s';
+      document.body.style.opacity = '0';
+      setTimeout(() => {
+        window.location.href = 'setor-7.html';
+      }, 700);
+    });
+  </script>
+</body>
+</html>

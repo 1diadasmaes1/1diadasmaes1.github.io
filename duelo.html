@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROTOCOLO DE COMBATE // σ4</title>
+  <link rel="stylesheet" href="assets/css/terminal.css">
+  <style>
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%      { transform: translate(-3px, 1px); }
+      40%      { transform: translate(3px, -1px); }
+      60%      { transform: translate(-2px, 2px); }
+      80%      { transform: translate(2px, -2px); }
+    }
+    body.in-combat {
+      overflow: hidden;
+      animation: shake 0.35s infinite;
+    }
+    body.in-combat .scanlines {
+      background-image: linear-gradient(rgba(255, 0, 0, 0.07) 50%, transparent 50%);
+    }
+
+    .combat-status {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      font-size: 14px;
+      z-index: 3;
+      text-align: right;
+      letter-spacing: 2px;
+    }
+    .combat-status .label {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+    .combat-status .state {
+      font-size: 18px;
+      color: #00ff00;
+      transition: color 0.4s;
+    }
+    body.in-combat .combat-status .state {
+      color: #ff3030;
+      text-shadow: 0 0 8px #ff0000;
+      animation: blink 0.8s step-end infinite;
+    }
+
+    .combat-timer {
+      font-size: 13px;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
+
+    .action-btn {
+      margin-top: 30px;
+      padding: 14px 24px;
+      font-size: 16px;
+      letter-spacing: 2px;
+      width: auto;
+      animation: fadeSlideIn 1s;
+    }
+
+    .red-glow {
+      color: #ff3030;
+      text-shadow: 0 0 6px #ff0000;
+    }
+    .red-btn {
+      border-color: #ff3030;
+      color: #ff3030;
+      box-shadow: 0 0 8px rgba(255, 0, 0, 0.4);
+    }
+    .red-btn:hover {
+      background-color: #ff3030;
+      color: #000;
+      box-shadow: 0 0 12px #ff0000;
+    }
+  </style>
+</head>
+<body>
+  <div class="start-screen" id="startScreen">
+    <div class="title glow">PROTOCOLO<br>DE COMBATE</div>
+    <div class="hint glow">&gt; clique para iniciar</div>
+  </div>
+
+  <div class="scanlines"></div>
+
+  <div id="combatStage">
+    <div class="combat-status glow">
+      <div class="label">STATUS</div>
+      <div class="state" id="state">STAND-BY</div>
+      <div class="combat-timer" id="combatTimer"></div>
+    </div>
+
+    <div id="terminal" class="glow"></div>
+  </div>
+
+  <audio id="ambient" loop preload="auto">
+    <source src="assets/audio/clock.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="bossFight" loop preload="auto">
+    <!-- TODO: substituir por boss-fight.mp3 (orquestral épica royalty-free) -->
+    <source src="assets/audio/boss-fight.mp3" type="audio/mpeg">
+    <source src="assets/audio/scary.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="clickFx" preload="auto">
+    <source src="assets/audio/click.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="billyDuelo" preload="auto">
+    <source src="assets/audio/sgt-billy-duelo.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="billyAftermath" preload="auto">
+    <source src="assets/audio/sgt-billy-aftermath.mp3" type="audio/mpeg">
+  </audio>
+
+  <script type="module">
+    import { typeLines, wait } from './assets/js/typewriter.js';
+    import { CONFIG } from './assets/js/config.js';
+
+    const startScreen = document.getElementById('startScreen');
+    const terminal = document.getElementById('terminal');
+    const ambient = document.getElementById('ambient');
+    const bossFight = document.getElementById('bossFight');
+    const clickFx = document.getElementById('clickFx');
+    const stateEl = document.getElementById('state');
+    const combatTimer = document.getElementById('combatTimer');
+    const billyDuelo = document.getElementById('billyDuelo');
+    const billyAftermath = document.getElementById('billyAftermath');
+
+    ambient.volume = 0.1;
+    bossFight.volume = 0.45;
+    clickFx.volume = 0.4;
+    billyDuelo.volume = 0.85;
+    billyAftermath.volume = 0.85;
+
+    const COMBAT_MIN_SECONDS = CONFIG.DUELO_MIN_SECONDS;
+
+    const briefingLines = [
+      "> Inimigo detectado.",
+      "> Sinal vital instável.",
+      "> Ele está pronto.",
+      "> Você está pronta.",
+      " ",
+    ];
+
+    const goLines = [
+      ">>> VAI.",
+    ];
+
+    const aftermathLines = [
+      "> ...inimigo neutralizado.",
+      "> Bom trabalho, 001.",
+      " ",
+      "> Procure no bolso dele.",
+      "> O que ele carregava aponta o caminho.",
+      " ",
+      "> Olhe seus arredores. Recupere os 3 fragmentos.",
+      "> Três sistemas: morse, base64, hexadecimal.",
+      "> Decodifique.",
+    ];
+
+    let combatStarted = 0;
+
+    function updateTimer() {
+      if (!combatStarted) return;
+      const elapsed = Math.floor((Date.now() - combatStarted) / 1000);
+      const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      combatTimer.textContent = `t+${m}:${s}`;
+    }
+
+    startScreen.addEventListener('click', async () => {
+      clickFx.currentTime = 0;
+      clickFx.play().catch(() => {});
+      startScreen.style.display = 'none';
+      ambient.play().catch(() => {});
+      billyDuelo.currentTime = 0;
+      billyDuelo.play().catch(() => {});
+
+      await wait(700);
+
+      await typeLines(terminal, briefingLines, {
+        speed: 40, jitter: 20, linePause: 500
+      });
+      await wait(800);
+
+      const initiateBtn = document.createElement('button');
+      initiateBtn.className = 'action-btn red-btn';
+      initiateBtn.textContent = '> INICIAR CONFRONTO';
+      terminal.appendChild(initiateBtn);
+
+      initiateBtn.addEventListener('click', async () => {
+        clickFx.currentTime = 0;
+        clickFx.play().catch(() => {});
+        initiateBtn.remove();
+
+        // Fade ambient → boss fight
+        ambient.pause();
+        bossFight.currentTime = 0;
+        bossFight.play().catch(() => {});
+
+        document.body.classList.add('in-combat');
+        stateEl.textContent = 'EM COMBATE';
+
+        combatStarted = Date.now();
+        const timerInterval = setInterval(updateTimer, 1000);
+        updateTimer();
+
+        await typeLines(terminal, goLines, {
+          speed: 80, jitter: 30, linePause: 0,
+          className: 'red-glow'
+        });
+
+        // Aviso pra ela voltar e clicar quando o duelo IRL terminar
+        await wait(1500);
+        const waiting = document.createElement('div');
+        waiting.style.opacity = '0.85';
+        waiting.style.marginTop = '20px';
+        waiting.style.fontSize = '14px';
+        terminal.appendChild(waiting);
+
+        // Countdown visível durante o tempo mínimo de combate
+        for (let s = COMBAT_MIN_SECONDS; s > 0; s--) {
+          waiting.textContent = `[ duelo em curso — confirmação liberada em ${s}s ]`;
+          await wait(1000);
+        }
+        waiting.textContent = '[ duelo em curso — confirmação liberada ]';
+
+        const defeatBtn = document.createElement('button');
+        defeatBtn.className = 'action-btn red-btn';
+        defeatBtn.style.marginTop = '20px';
+        defeatBtn.textContent = '> MONSTRO ABATIDO';
+        terminal.appendChild(defeatBtn);
+        terminal.scrollTop = terminal.scrollHeight;
+
+        defeatBtn.addEventListener('click', async () => {
+          clickFx.currentTime = 0;
+          clickFx.play().catch(() => {});
+
+          // Fade out boss fight
+          const fadeOut = setInterval(() => {
+            bossFight.volume = Math.max(0, bossFight.volume - 0.05);
+            if (bossFight.volume <= 0) {
+              bossFight.pause();
+              clearInterval(fadeOut);
+            }
+          }, 60);
+
+          document.body.classList.remove('in-combat');
+          stateEl.textContent = 'NEUTRALIZADO';
+          clearInterval(timerInterval);
+
+          defeatBtn.remove();
+          waiting.remove();
+
+          await wait(1000);
+
+          billyAftermath.currentTime = 0;
+          billyAftermath.play().catch(() => {});
+
+          await typeLines(terminal, aftermathLines, {
+            speed: 35, jitter: 20, linePause: 500
+          });
+          await wait(800);
+
+          const nextBtn = document.createElement('button');
+          nextBtn.className = 'action-btn glow';
+          nextBtn.textContent = '> DECODIFICAR FRAGMENTOS';
+          terminal.appendChild(nextBtn);
+          terminal.scrollTop = terminal.scrollHeight;
+
+          nextBtn.addEventListener('click', () => {
+            clickFx.currentTime = 0;
+            clickFx.play().catch(() => {});
+            document.body.style.transition = 'opacity 0.6s';
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+              window.location.href = 'fragmento-1.html';
+            }, 700);
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>

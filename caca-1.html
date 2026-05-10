@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REGISTRO PRESENTE // σ4</title>
+  <link rel="stylesheet" href="assets/css/terminal.css">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .terminal-stage {
+      width: 700px;
+      max-width: 90%;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .fase-banner {
+      font-size: 14px;
+      letter-spacing: 5px;
+      opacity: 0.7;
+      margin-bottom: 6px;
+    }
+
+    .fase-title {
+      font-size: 48px;
+      letter-spacing: 4px;
+      text-shadow: 0 0 8px #00ff00;
+      margin-bottom: 20px;
+      line-height: 1.1;
+    }
+
+    .message {
+      font-size: 22px;
+      line-height: 1.6;
+      opacity: 0;
+      margin: 18px 0;
+    }
+    .slide-fade-in {
+      animation: fadeSlideIn 1.5s ease-out forwards;
+    }
+
+    .timer-area {
+      margin-top: 36px;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    .timer-area.visible { opacity: 1; }
+
+    .timer {
+      display: inline-block;
+      font-size: 38px;
+      letter-spacing: 4px;
+      padding: 10px 24px;
+      border: 2px solid transparent;
+      transition: all 0.5s;
+    }
+    .timer.glow {
+      border-color: #00ff00;
+      box-shadow: 0 0 16px #00ff00;
+    }
+    .timer.warn {
+      color: #ffcc00;
+      border-color: #ffcc00;
+      box-shadow: 0 0 14px #ffcc00;
+      animation: blink 1s step-end infinite;
+    }
+    .timer.danger {
+      color: #ff3030;
+      border-color: #ff3030;
+      box-shadow: 0 0 16px #ff3030;
+      animation: blink 0.5s step-end infinite;
+    }
+
+    .start-timer-btn {
+      display: none;
+      padding: 12px 24px;
+      font-size: 14px;
+      letter-spacing: 3px;
+      width: auto;
+      margin-top: 16px;
+    }
+
+    .form-section {
+      margin-top: 30px;
+      display: none;
+      animation: fadeSlideIn 1s;
+    }
+    .form-section .label {
+      font-size: 12px;
+      letter-spacing: 3px;
+      opacity: 0.7;
+      margin-bottom: 6px;
+    }
+    .form-section input[type="text"] {
+      width: 280px;
+      padding: 12px;
+      font-size: 18px;
+      letter-spacing: 3px;
+      text-align: center;
+    }
+    .form-section button {
+      width: auto;
+      padding: 12px 22px;
+      font-size: 14px;
+      letter-spacing: 3px;
+      margin-top: 14px;
+    }
+
+    .response {
+      margin-top: 20px;
+      font-size: 14px;
+      white-space: pre-wrap;
+      min-height: 60px;
+    }
+
+    .red-flash {
+      position: fixed;
+      inset: 0;
+      background: red;
+      opacity: 0;
+      z-index: 1000;
+      animation: flashRed 1s ease-out forwards;
+      pointer-events: none;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="start-screen" id="startScreen">
+    <div class="title glow" style="font-size: 56px; line-height: 1.05;">REGISTRO<br>PRESENTE</div>
+    <div class="hint glow">&gt; clique para receber</div>
+  </div>
+
+  <div class="scanlines"></div>
+
+  <a href="tools.html" target="_blank" class="tools-link">// TOOLS</a>
+
+  <div class="terminal-stage">
+    <div class="fase-banner glow">// REGISTRO PRESENTE — NÃO CORROMPIDO</div>
+    <div class="fase-title glow" style="display:none;" id="title">σ4 / IV</div>
+
+    <div class="message glow" id="msg1">
+      Esse fragmento não é do passado.
+    </div>
+    <div class="message glow" id="msg2">
+      Há semanas você ensina seu corpo uma língua nova.
+    </div>
+    <div class="message glow" id="msg3">
+      Vá ao setor onde sua respiração fica mais alta.
+    </div>
+    <div class="message glow" id="msg4">
+      Procure na borda — onde o ar te encontra primeiro.
+    </div>
+
+    <div class="timer-area" id="timerArea">
+      <div class="timer" id="timer">03:00</div>
+    </div>
+
+    <div class="form-section glow" id="formSection">
+      <div class="label">// ID DO ARTEFATO</div>
+      <input type="text" id="idInput" autocomplete="off" spellcheck="false">
+      <div>
+        <button class="glow" id="verifyBtn">&gt; VERIFICAR</button>
+      </div>
+      <div class="response" id="response"></div>
+    </div>
+  </div>
+
+  <div class="red-flash" id="redFlash"></div>
+
+  <audio id="ambient" loop preload="auto">
+    <source src="assets/audio/clock.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="successFx" preload="auto">
+    <source src="assets/audio/click.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="alarmFx" loop preload="auto">
+    <source src="assets/audio/scary.mp3" type="audio/mpeg">
+  </audio>
+
+  <script type="module">
+    import { CONFIG } from './assets/js/config.js';
+    import { normalize } from './assets/js/decoders.js';
+    import { playSuccess, playError, playBigSuccess, pulseSuccess, shakeError } from './assets/js/feedback.js';
+
+    const startScreen = document.getElementById('startScreen');
+    const ambient = document.getElementById('ambient');
+    const successFx = document.getElementById('successFx');
+    const alarmFx = document.getElementById('alarmFx');
+    ambient.volume = 0.1;
+    successFx.volume = 0.4;
+    alarmFx.volume = 0.4;
+
+    const EXPECTED_ID = CONFIG.ID_ARTEFATO_A;
+    const TIMER_SECONDS = CONFIG.CACA_1_TIMER;
+
+    const messages = ['msg1', 'msg2', 'msg3', 'msg4'].map(id => document.getElementById(id));
+    const title = document.getElementById('title');
+    const timerArea = document.getElementById('timerArea');
+    const timerEl = document.getElementById('timer');
+    const startBtn = document.getElementById('startBtn');
+    const formSection = document.getElementById('formSection');
+    const idInput = document.getElementById('idInput');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const response = document.getElementById('response');
+    const redFlash = document.getElementById('redFlash');
+
+    let timerInterval = null;
+    let solved = false;
+
+    function fmt(s) {
+      const m = String(Math.floor(s / 60)).padStart(2, '0');
+      const sec = String(s % 60).padStart(2, '0');
+      return `${m}:${sec}`;
+    }
+
+    function startTimer() {
+      let t = TIMER_SECONDS;
+      timerEl.textContent = fmt(t);
+      timerEl.classList.add('glow');
+      alarmFx.currentTime = 0;
+      alarmFx.play().catch(() => {});
+      timerInterval = setInterval(() => {
+        t--;
+        timerEl.textContent = fmt(t);
+        if (t <= 60 && !timerEl.classList.contains('danger')) {
+          timerEl.classList.remove('warn', 'glow');
+          timerEl.classList.add('danger');
+        } else if (t <= 120 && !timerEl.classList.contains('warn')) {
+          timerEl.classList.remove('glow');
+          timerEl.classList.add('warn');
+        }
+        if (t <= 0) {
+          clearInterval(timerInterval);
+          fail();
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      alarmFx.pause();
+    }
+
+    function fail() {
+      stopTimer();
+      redFlash.style.display = 'block';
+      response.textContent = '> Tempo esgotado.\n> Reinicializando setor...';
+      setTimeout(() => {
+        location.reload();
+      }, 2800);
+    }
+
+    startScreen.addEventListener('click', () => {
+      successFx.play().catch(() => {});
+      startScreen.style.display = 'none';
+      ambient.play().catch(() => {});
+
+      title.style.display = 'block';
+      title.classList.add('slide-fade-in');
+
+      setTimeout(() => messages[0].classList.add('slide-fade-in'), 1000);
+      setTimeout(() => messages[1].classList.add('slide-fade-in'), 4500);
+      setTimeout(() => messages[2].classList.add('slide-fade-in'), 8000);
+      setTimeout(() => messages[3].classList.add('slide-fade-in'), 11500);
+      // Timer e form aparecem juntos, timer começa AUTOMÁTICO
+      setTimeout(() => {
+        timerArea.classList.add('visible');
+        formSection.style.display = 'block';
+        ambient.pause();
+        startTimer();
+      }, 14500);
+    });
+
+    function verify() {
+      if (solved) return;
+      const id = idInput.value;
+
+      if (!id.trim()) {
+        response.textContent = '> Insira o ID do artefato.';
+        return;
+      }
+
+      if (normalize(id) === normalize(EXPECTED_ID)) {
+        solved = true;
+        stopTimer();
+        timerEl.classList.remove('warn', 'danger', 'glow');
+        playBigSuccess();
+        pulseSuccess(formSection);
+        response.textContent = '\n> Analisando artefato...\n> Verificações registradas e aprovadas.\n> Artefato validado.\n> Seguindo transmissão.';
+        setTimeout(() => {
+          document.body.style.transition = 'opacity 0.8s';
+          document.body.style.opacity = '0';
+          setTimeout(() => {
+            window.location.href = 'caca-2.html';
+          }, 800);
+        }, 2200);
+      } else {
+        playError();
+        shakeError(formSection);
+        response.textContent = '\n> Analisando artefato...\n> Artefato inválido.\n> Acesso negado.';
+      }
+    }
+
+    verifyBtn.addEventListener('click', verify);
+    idInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') verify();
+    });
+  </script>
+</body>
+</html>

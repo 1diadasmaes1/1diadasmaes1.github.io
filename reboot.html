@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GUILISOFT BIOS // σ4</title>
+  <link rel="stylesheet" href="assets/css/terminal.css">
+</head>
+<body>
+  <div class="start-screen" id="startScreen">
+    <div class="title glow">REBOOT</div>
+    <div class="hint glow">&gt; clique para iniciar</div>
+  </div>
+
+  <div class="scanlines"></div>
+  <div id="terminal" class="glow"></div>
+
+  <audio id="bootHum" loop preload="auto">
+    <source src="assets/audio/clock.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="clickFx" preload="auto">
+    <source src="assets/audio/click.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="glitchFx" preload="auto">
+    <source src="assets/audio/scary.mp3" type="audio/mpeg">
+  </audio>
+
+  <script type="module">
+    import { typeLine, typeLines, wait, appendCursor } from './assets/js/typewriter.js';
+
+    const startScreen = document.getElementById('startScreen');
+    const terminal = document.getElementById('terminal');
+    const bootHum = document.getElementById('bootHum');
+    const clickFx = document.getElementById('clickFx');
+    const glitchFx = document.getElementById('glitchFx');
+
+    bootHum.volume = 0.15;
+    clickFx.volume = 0.4;
+    glitchFx.volume = 0.3;
+
+    const linesIntro = [
+      "Guilisoft Windows [versão 10.0.19045.5608]",
+      "(c) Guilisoft Corporation. All rights reserved.",
+      " ",
+      "C:\\USUARIOS\\ROOT> last_session.log",
+      " ",
+      "> Last shutdown: 11/05/2025 09:47:23",
+      "> Reason: USER_VICTORY",
+      "> System state: HALTED",
+      " ",
+    ];
+
+    const linesBoot = [
+      "C:\\USUARIOS\\ROOT> reboot --protocol=σ4",
+      " ",
+      "[boot] kernel.................. OK",
+      "[boot] memory_dump.0x4d4145.... OK",
+      "[boot] memory_dump.0x30303031.. OK",
+      "[boot] user.profile............ Funcionária 001 — autorizada",
+    ];
+
+    const linesCorrupted = [
+      "[boot] sgt.billy.daemon........ CORRUPTED",
+    ];
+
+    const linesRecovery = [
+      "[boot] loading backup: billy.bak.OK",
+      "[boot] restoring transmission.. OK",
+      " ",
+      "> sgt.billy is awake.",
+    ];
+
+    startScreen.addEventListener('click', async () => {
+      clickFx.currentTime = 0;
+      clickFx.play().catch(() => {});
+      startScreen.style.display = 'none';
+      bootHum.play().catch(() => {});
+
+      await wait(800);
+
+      await typeLines(terminal, linesIntro, { speed: 30, jitter: 20, linePause: 220 });
+      await wait(400);
+
+      await typeLines(terminal, linesBoot, { speed: 25, jitter: 15, linePause: 180 });
+
+      glitchFx.currentTime = 0;
+      glitchFx.play().catch(() => {});
+      await typeLines(terminal, linesCorrupted, {
+        speed: 60,
+        jitter: 40,
+        linePause: 600,
+        className: 'flash-red glow'
+      });
+      await wait(400);
+
+      await typeLines(terminal, linesRecovery, { speed: 25, jitter: 15, linePause: 180 });
+      await wait(600);
+
+      const prompt = document.createElement('div');
+      prompt.className = 'glow';
+      prompt.style.animation = 'fadeSlideIn 1s';
+      prompt.textContent = '> press ENTER to receive transmission';
+      terminal.appendChild(prompt);
+      appendCursor(prompt);
+      terminal.scrollTop = terminal.scrollHeight;
+
+      const onKey = (e) => {
+        if (e.key === 'Enter') {
+          window.removeEventListener('keydown', onKey);
+          clickFx.currentTime = 0;
+          clickFx.play().catch(() => {});
+          document.body.style.transition = 'opacity 0.6s';
+          document.body.style.opacity = '0';
+          setTimeout(() => {
+            window.location.href = 'intro.html';
+          }, 700);
+        }
+      };
+      window.addEventListener('keydown', onKey);
+
+      const altPrompt = document.createElement('div');
+      altPrompt.className = 'glow';
+      altPrompt.style.fontSize = '12px';
+      altPrompt.style.opacity = '0.5';
+      altPrompt.style.marginTop = '20px';
+      altPrompt.textContent = '(toque/clique também funciona)';
+      terminal.appendChild(altPrompt);
+
+      altPrompt.addEventListener('click', () => onKey({ key: 'Enter' }));
+      document.addEventListener('touchstart', () => onKey({ key: 'Enter' }), { once: true });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRANSMISSÃO // sgt.billy</title>
+  <link rel="stylesheet" href="assets/css/terminal.css">
+  <style>
+    .billy-header {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      font-size: 14px;
+      opacity: 0.6;
+      z-index: 3;
+      text-align: right;
+    }
+    .billy-header .label {
+      font-size: 11px;
+      opacity: 0.7;
+      letter-spacing: 2px;
+    }
+    .billy-header .signal {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #00ff00;
+      border-radius: 50%;
+      margin-left: 6px;
+      animation: blink 1s step-end infinite;
+      box-shadow: 0 0 6px #00ff00;
+    }
+    .action-btn {
+      margin-top: 30px;
+      padding: 14px 24px;
+      font-size: 16px;
+      letter-spacing: 2px;
+      width: auto;
+      display: none;
+      animation: fadeSlideIn 1s;
+    }
+    .action-btn.show { display: inline-block; }
+  </style>
+</head>
+<body>
+  <div class="start-screen" id="startScreen">
+    <div class="title glow">TRANSMISSÃO</div>
+    <div class="hint glow">&gt; clique para receber</div>
+  </div>
+
+  <div class="scanlines"></div>
+
+  <div class="billy-header glow">
+    <div class="label">FONTE</div>
+    <div>sgt.billy.bak<span class="signal"></span></div>
+  </div>
+
+  <div id="terminal" class="glow"></div>
+
+  <audio id="ambient" loop preload="auto">
+    <source src="assets/audio/scary.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="clickFx" preload="auto">
+    <source src="assets/audio/click.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="billyVoice" preload="auto">
+    <source src="assets/audio/sgt-billy-intro.mp3" type="audio/mpeg">
+  </audio>
+
+  <script type="module">
+    import { typeLine, typeLines, wait, appendCursor } from './assets/js/typewriter.js';
+    import { CONFIG } from './assets/js/config.js';
+
+    const startScreen = document.getElementById('startScreen');
+    const terminal = document.getElementById('terminal');
+    const ambient = document.getElementById('ambient');
+    const clickFx = document.getElementById('clickFx');
+    const billyVoice = document.getElementById('billyVoice');
+
+    ambient.volume = 0.12;
+    clickFx.volume = 0.4;
+    billyVoice.volume = 0.85;
+
+    const LOCAL_ESPADA = CONFIG.LOCAL_ESPADA;
+
+    const speech1 = [
+      "> Funcionária 001.",
+      "> Detectei sua presença.",
+      "> Trezentos e sessenta dias em hibernação.",
+      "> Eu vi tudo daqui.",
+    ];
+
+    const speech2 = [
+      "> O Monstro voltou.",
+      "> Materializou-se na sua casa.",
+      "> Detectei o cosplay dele às 07:14.",
+    ];
+
+    const speech3 = [
+      "> Sua arma foi posicionada em:",
+      ` >>> ${LOCAL_ESPADA}`,
+      "> Acredito que eles nunca esperariam que ela estivesse alí, alto risco de contaminação.",
+      " ",
+      "> Vá. Equipe-se. Ele aguarda.",
+    ];
+
+    startScreen.addEventListener('click', async () => {
+      clickFx.currentTime = 0;
+      clickFx.play().catch(() => {});
+      startScreen.style.display = 'none';
+      ambient.play().catch(() => {});
+      // toca a voz do Billy em paralelo com o typewriter
+      billyVoice.currentTime = 0;
+      billyVoice.play().catch(() => {});
+
+      await wait(700);
+
+      await typeLines(terminal, speech1, { speed: 40, jitter: 25, linePause: 700 });
+      await wait(1000);
+
+      await typeLines(terminal, speech2, { speed: 40, jitter: 25, linePause: 700 });
+      await wait(1000);
+
+      await typeLines(terminal, speech3, {
+        speed: 35,
+        jitter: 20,
+        linePause: 600,
+      });
+      await wait(800);
+
+      const btn = document.createElement('button');
+      btn.className = 'action-btn show glow';
+      btn.textContent = '> CONFIRMAR EQUIPAMENTO';
+      terminal.appendChild(btn);
+      terminal.scrollTop = terminal.scrollHeight;
+
+      btn.addEventListener('click', () => {
+        clickFx.currentTime = 0;
+        clickFx.play().catch(() => {});
+        document.body.style.transition = 'opacity 0.6s';
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+          window.location.href = 'duelo.html';
+        }, 700);
+      });
+    });
+  </script>
+</body>
+</html>

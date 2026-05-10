@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>CONEXÃO ESTABELECIDA...</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .start-screen {
+      position: absolute;
+      background-color: #000;
+      color: #00ff00;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      text-align: center;
+    }
+
+    body {
+      background-color: #000;
+      color: #00ff00;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
+      overflow: hidden;
+      border: 3px solid #00ff00; /* Green outline applied to the body */
+      transition: border 0.5s ease-in-out; /* Smooth transition for the outline */
+    }
+
+    .terminal {
+      max-width: 800px;
+      line-height: 1.7;
+      font-size: 18px;
+      white-space: pre-wrap;
+    }
+
+    .glitch-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #00ff00;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      animation: glitch 0.5s ease-in forwards;
+    }
+
+        /* FASE 1 Text Style */
+    .fase-text {
+      text-align: center;
+      font-size: 80px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .click-text {
+      font-size: 40px;
+      opacity: 1;
+      transform: translateY(0);
+      cursor: pointer;
+    }
+    
+    @keyframes glitch {
+      0% { opacity: 0; }
+      10% { opacity: 0.1; }
+      20% { opacity: 0.4; }
+      30% { opacity: 0.2; }
+      40% { opacity: 0.6; }
+      50% { opacity: 0.1; }
+      60% { opacity: 0.3; }
+      70% { opacity: 0.5; }
+      80% { opacity: 0.2; }
+      90% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Start Screen with Outline -->
+  <div class="start-screen" id="startScreen">
+    <div class="fase-text" id="faseText">
+      <u>INÍCIO</u>
+    </div>
+    <div class="click-text" id="clickText">
+      <small>Clique para começar</small>
+    </div>
+  </div>
+  <div class="terminal" id="terminal"></div>
+  <div class="glitch-overlay" id="glitch" style="display: none;"></div>
+
+  <!-- Sounds -->
+  <audio id="keySound" src="keypress.mp3" preload="auto"></audio>
+  <audio id="voice" preload="auto" loop>
+    <source src="voice.mp3" type="audio/mpeg">
+    Seu navegador não suporta áudio embutido.
+  </audio>
+  <audio id="click" src="click.mp3" preload="auto"></audio>
+  
+
+  <script>
+    const lines = [
+      "Aqui é o Sargento Billy falando.",
+      "O ano é 2025.",
+      "E as memórias de amor estão sendo corrompidas em tempo real.",
+      "O quarto atrás de você é a única cápsula que é capaz de preservar o tempo.",
+      "Para recuperar e salvar esses artefatos,",
+      "é necessário entrar dentro da [MATRIX] e descriptografar os códigos.",
+      "Mas cuidado, há monstros e enigmas ali dentro.",
+      "Serão momentos desafiadores, maiores do que qualquer desafio,",
+      "mas eu sei que você consegue.",
+      "Bem-vinda, Participante 001. E boa sorte."
+    ];
+
+    const terminal = document.getElementById('terminal');
+    const keySound = document.getElementById('keySound');
+
+    let totalDuration = 0;
+
+    function typeLine(text, delay) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const line = document.createElement('div');
+          terminal.appendChild(line);
+
+          let i = 0;
+          const typeChar = () => {
+            if (i < text.length) {
+              line.textContent += text.charAt(i);
+              keySound.currentTime = 0;
+              keySound.volume = 0.2
+              keySound.play();
+              i++;
+              setTimeout(typeChar, 40 + Math.random() * 40); // random rhythm
+            } else {
+              resolve();
+            }
+          };
+          line.textContent = "> ";
+          typeChar();
+        }, delay);
+      });
+    }
+
+    async function typeAllLines() {
+      for (let i = 0; i < lines.length; i++) {
+        await typeLine(lines[i], 500);
+      }
+
+      // After all lines, delay 2s, then glitch
+      setTimeout(() => {
+        document.getElementById('glitch').style.display = 'block';
+      }, 2000);
+
+      setTimeout(() => {
+        window.location.href = "1.html";
+      }, 3000);
+    }
+
+    window.onload = () => {
+        const startScreen = document.getElementById('startScreen');
+        const clickText = document.getElementById('clickText');
+        const voice = document.getElementById('voice');
+        const body = document.body
+
+        clickText.addEventListener('click', () => {
+            // Hide overlay
+            startScreen.style.display = 'none';
+            body.style.border = 'none';
+            click.play().catch(err => console.warn("Autoplay blocked:", err));
+
+            // Attempt to play voice
+            voice.volume = 1;
+            voice.play().catch(err => {
+            console.warn("Voice playback failed:", err);
+            });
+
+            // Start text typing
+            typeAllLines();
+        });
+    };
+  </script>
+</body>
+</html>

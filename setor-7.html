@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SETOR 7 // CHAVE-MESTRE</title>
+  <link rel="stylesheet" href="assets/css/terminal.css">
+  <style>
+    body { overflow: hidden; }
+
+    canvas#rain {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    .page {
+      position: relative;
+      z-index: 2;
+      max-width: 700px;
+      margin: 80px auto;
+      padding: 40px 30px;
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 24px #00ff00;
+    }
+
+    .page-label {
+      font-size: 11px;
+      letter-spacing: 4px;
+      opacity: 0.6;
+      margin-bottom: 8px;
+    }
+    .page h1 {
+      margin: 0 0 30px;
+      font-size: 26px;
+      letter-spacing: 3px;
+      text-shadow: 0 0 6px #00ff00;
+    }
+
+    .billy-block { min-height: 130px; margin-bottom: 24px; }
+    .billy-line { font-size: 16px; line-height: 1.7; animation: fadeSlideIn 0.6s; }
+
+    .key-form {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px dashed #00ff00;
+    }
+    .key-form .label {
+      font-size: 12px;
+      letter-spacing: 3px;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    .key-form .hint {
+      font-size: 12px;
+      opacity: 0.5;
+      font-style: italic;
+      margin-bottom: 12px;
+    }
+    .key-form input[type="text"] {
+      background: #000;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 18px;
+      width: 100%;
+      letter-spacing: 4px;
+      text-align: center;
+    }
+    .key-form input:focus {
+      outline: none;
+      border-color: #80ff80;
+      box-shadow: 0 0 8px #00ff00;
+    }
+    .key-form .status {
+      margin-top: 14px;
+      font-size: 13px;
+      letter-spacing: 2px;
+      opacity: 0.7;
+      min-height: 22px;
+      text-align: center;
+    }
+    .key-form .status.error {
+      color: #ff6060;
+      animation: flashRed 0.4s;
+    }
+    .key-form .verify-btn {
+      margin-top: 14px;
+      padding: 10px 22px;
+      width: auto;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+
+    .reveal {
+      margin-top: 30px;
+      padding: 30px;
+      text-align: center;
+      border-top: 1px solid #00ff00;
+      display: none;
+      animation: fadeSlideIn 1s;
+    }
+    .reveal.show { display: block; }
+    .reveal .label {
+      font-size: 12px;
+      letter-spacing: 3px;
+      opacity: 0.7;
+      margin-bottom: 14px;
+    }
+    .reveal .location {
+      font-size: 32px;
+      letter-spacing: 4px;
+      margin-bottom: 24px;
+      text-shadow: 0 0 10px #00ff00;
+      min-height: 40px;
+    }
+    .reveal-billy { margin: 18px 0; }
+
+    .action-btn {
+      padding: 14px 28px;
+      font-size: 16px;
+      letter-spacing: 3px;
+      width: auto;
+    }
+
+    body.solved canvas#rain {
+      transition: opacity 2s, filter 2s;
+      opacity: 0.18;
+      filter: hue-rotate(20deg) brightness(0.8);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="rain"></canvas>
+
+  <a href="tools.html" target="_blank" class="tools-link">// TOOLS</a>
+
+  <div class="page">
+    <div class="page-label">// SETOR 7 — REGISTRO PROFUNDO</div>
+    <h1>NÚCLEO σ4</h1>
+
+    <div class="billy-block glow" id="billyBlock"></div>
+
+    <div class="key-form glow">
+      <div class="label">// CHAVE-MESTRE</div>
+      <input type="text" id="keyInput" placeholder="" autocomplete="off" spellcheck="false">
+      <button class="verify-btn glow" id="verifyBtn">&gt; INSERIR</button>
+      <div class="status" id="keyStatus"></div>
+    </div>
+
+    <div class="reveal glow" id="reveal">
+      <div class="label">// NÚCLEO σ4 — LOCALIZAÇÃO</div>
+      <div class="location" id="location"></div>
+      <div class="reveal-billy" id="revealBilly"></div>
+      <button class="action-btn glow" id="nextBtn" style="display:none;">
+        &gt; ABRIR O NÚCLEO
+      </button>
+    </div>
+  </div>
+
+  <audio id="ambient" loop preload="auto">
+    <source src="assets/audio/scary.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="successFx" preload="auto">
+    <source src="assets/audio/click.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="warmFx" preload="auto">
+    <source src="assets/audio/warm.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="billyVoice" preload="auto">
+    <source src="assets/audio/sgt-billy-setor7.mp3" type="audio/mpeg">
+  </audio>
+
+  <script type="module">
+    import { typeLines, wait } from './assets/js/typewriter.js';
+    import { CONFIG } from './assets/js/config.js';
+    import { normalize } from './assets/js/decoders.js';
+    import { playBigSuccess, playError, pulseSuccess, shakeError } from './assets/js/feedback.js';
+
+    const ambient = document.getElementById('ambient');
+    const successFx = document.getElementById('successFx');
+    const warmFx = document.getElementById('warmFx');
+    const billyVoice = document.getElementById('billyVoice');
+    ambient.volume = 0.1;
+    successFx.volume = 0.4;
+    warmFx.volume = 0.5;
+    billyVoice.volume = 0.85;
+
+    const billyBlock = document.getElementById('billyBlock');
+    const keyInput = document.getElementById('keyInput');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const keyStatus = document.getElementById('keyStatus');
+    const reveal = document.getElementById('reveal');
+    const locationEl = document.getElementById('location');
+    const revealBilly = document.getElementById('revealBilly');
+    const nextBtn = document.getElementById('nextBtn');
+
+    const EXPECTED_KEY = CONFIG.CRACHA_HEX_WORD;
+    const LOCAL_GAVETA = CONFIG.LOCAL_GAVETA;
+
+    const intro = [
+      '> Aqui está o último segmento.',
+      '> Codificado com a chave que você sempre carregou.',
+      ' ',
+      '> Olhe pro seu peito, Funcionária 001.',
+    ];
+
+    const closing = [
+      '> A chave esteve com você desde o primeiro segundo.',
+      '> Sempre esteve.',
+      ' ',
+      '> Vá ao Núcleo. Eu estarei lá. Pela última vez.',
+    ];
+
+    // === MATRIX HEX RAIN ===
+    const canvas = document.getElementById('rain');
+    const ctx = canvas.getContext('2d');
+    let rainRunning = true;
+
+    function fitCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    fitCanvas();
+    window.addEventListener('resize', fitCanvas);
+
+    const HEX_CHARS = '0123456789ABCDEF';
+    const fontSize = 16;
+    let columns = Math.floor(canvas.width / fontSize);
+    let drops = Array(columns).fill(0).map(() => Math.random() * -50);
+
+    let rainInterval = null;
+    function drawRain() {
+      if (!rainRunning) return;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.10)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff00';
+      ctx.font = `${fontSize}px JetBrains Mono, monospace`;
+      for (let i = 0; i < drops.length; i++) {
+        const ch = HEX_CHARS[Math.floor(Math.random() * HEX_CHARS.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+        ctx.fillText(ch, x, y);
+        if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }
+
+    let started = false;
+    function start() {
+      if (started) return;
+      started = true;
+      ambient.play().catch(() => {});
+      // ~10fps em vez de 60fps — bem mais lento e atmosférico
+      rainInterval = setInterval(drawRain, 100);
+    }
+    document.addEventListener('click', start, { once: true });
+    document.addEventListener('keydown', start, { once: true });
+    keyInput.addEventListener('focus', start, { once: true });
+
+    // Slight delay then type Billy's intro
+    (async () => {
+      await wait(800);
+      billyVoice.currentTime = 0;
+      billyVoice.play().catch(() => {});
+      await typeLines(billyBlock, intro, { speed: 40, jitter: 20, linePause: 600 });
+    })();
+
+    let solved = false;
+    async function verifyKey() {
+      if (solved) return;
+      const guess = keyInput.value;
+      if (!guess.trim()) {
+        keyStatus.textContent = '[ chave vazia ]';
+        return;
+      }
+
+      if (normalize(guess) === normalize(EXPECTED_KEY)) {
+        solved = true;
+        document.body.classList.add('solved');
+
+        playBigSuccess();
+        pulseSuccess(document.querySelector('.key-form'));
+        warmFx.currentTime = 0;
+        warmFx.play().catch(() => {});
+
+        keyStatus.textContent = '> chave aceita';
+        keyInput.disabled = true;
+        verifyBtn.disabled = true;
+
+        await wait(800);
+        reveal.classList.add('show');
+
+        const fullLocation = `${LOCAL_GAVETA}`;
+        for (const ch of fullLocation) {
+          locationEl.textContent += ch;
+          await wait(80 + Math.random() * 50);
+        }
+
+        await wait(800);
+        await typeLines(revealBilly, closing, {
+          speed: 38, jitter: 15, linePause: 600
+        });
+
+        await wait(500);
+        nextBtn.style.display = 'inline-block';
+        reveal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        keyStatus.textContent = '> chave inválida';
+        keyStatus.classList.add('error');
+        playError();
+        shakeError(document.querySelector('.key-form'));
+        setTimeout(() => keyStatus.classList.remove('error'), 600);
+      }
+    }
+
+    verifyBtn.addEventListener('click', verifyKey);
+    keyInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); verifyKey(); }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      successFx.currentTime = 0;
+      successFx.play().catch(() => {});
+      document.body.style.transition = 'opacity 0.6s';
+      document.body.style.opacity = '0';
+      setTimeout(() => {
+        window.location.href = 'nucleo.html';
+      }, 700);
+    });
+  </script>
+</body>
+</html>
